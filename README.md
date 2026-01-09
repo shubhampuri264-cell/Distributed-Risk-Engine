@@ -11,7 +11,7 @@ A high-performance risk engine capable of:
 - `src/`: Source code including Core Engine, CLI, and API
 - `tests/`: Unit and integration tests
 
-## getting Started
+## Getting Started
 
 1. Install dependencies:
    ```bash
