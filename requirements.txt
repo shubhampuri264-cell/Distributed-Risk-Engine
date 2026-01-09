@@ -1,0 +1,13 @@
+pandas
+numpy
+duckdb
+ray
+fastapi
+uvicorn
+streamlit
+redis
+yfinance
+click
+pytest
+requests
+ccxt
