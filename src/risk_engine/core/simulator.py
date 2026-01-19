@@ -11,7 +11,7 @@ if not ray.is_initialized():
 def simulate_chunk(S0: float, mu: float, sigma: float, T: int, dt: float, n_paths: int) -> np.ndarray:
     """
     Simulates a chunk of paths using Geometric Brownian Motion.
-    Returns the final prices for this chunk.
+    Returns the full Price Paths for this chunk (shape: n_paths x days).
     """
     # Number of steps
     N = int(T / dt)
@@ -28,11 +28,22 @@ def simulate_chunk(S0: float, mu: float, sigma: float, T: int, dt: float, n_path
     # Vectorized calculation of final price:
     # S_T = S_0 * exp( (mu - 0.5*sigma^2)*T + sigma * sum(dW) )
     
-    drift = (mu - 0.5 * sigma**2) * T
-    diffusion = sigma * np.sum(shocks, axis=1)
+    drift = (mu - 0.5 * sigma**2) * dt
+    # Cumulative sum over time (axis 1 = days)
+    diffusion = sigma * np.cumsum(shocks, axis=1)
     
-    ST = S0 * np.exp(drift + diffusion)
-    return ST
+    # We need a time array for drift: [dt, 2dt, ... N*dt]
+    t = np.arange(1, N + 1) * dt
+    drift_cum = (mu - 0.5 * sigma**2) * t
+    
+    # ST is now (n_paths, N) matrix
+    ST = S0 * np.exp(drift_cum + diffusion)
+    
+    # Prepend S0 (optional, but good for charts). Let's stick to returning N steps first.
+    # Actually, Chart.js looks better if we start at S0. 
+    # Let's prepend S0 column.
+    S0_col = np.full((n_paths, 1), S0)
+    return np.hstack([S0_col, ST])
 
 class MonteCarloSimulator:
     def __init__(self, n_paths: int = 10000, time_horizon: int = 252):

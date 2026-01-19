@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Risk Engine</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="overlay">
+        <div class="glass-card login-box">
+            <h1>Risk Engine</h1>
+            <input type="text" id="username" placeholder="Username" value="admin">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button onclick="login()">Login</button>
+            <p id="login-error" class="error"></p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>DRE ⚡</h2>
+            <nav>
+                <button class="nav-btn active" onclick="showTab('dashboard-tab')">📊 Dashboard</button>
+                <button class="nav-btn" onclick="showTab('ingest-tab')">📥 Ingestion</button>
+                <button class="nav-btn" onclick="showTab('simulate-tab')">🎲 Simulation</button>
+                <button class="nav-btn" onclick="showTab('stress-tab')">🔥 Stress Test</button>
+            </nav>
+            <div class="user-info">
+                <span>Admin</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+
+            <!-- Dashboard Tab -->
+            <section id="dashboard-tab" class="tab-content active">
+                <div class="glass-card">
+                    <h2>System Status</h2>
+                    <div class="results-grid">
+                        <div class="metric-card">
+                            <label>API Status</label>
+                            <div class="value">
+                                <span id="status-text">Checking...</span>
+                                <span id="status-indicator"></span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <label>Active Tickers</label>
+                            <div id="status-tickers" class="value">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <label>Last Sync</label>
+                            <div id="status-sync" class="value">--</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ingest Tab -->
+            <section id="ingest-tab" class="tab-content">
+                <div class="glass-card">
+                    <h2>Market Data Ingestion</h2>
+                    <div class="input-group">
+                        <label>Tickers (comma separated)</label>
+                        <input type="text" id="ingest-tickers" value="AAPL,MSFT">
+                    </div>
+                    <div class="row">
+                        <div class="input-group">
+                            <label>Start Date</label>
+                            <input type="date" id="ingest-start" value="2023-01-01">
+                        </div>
+                        <div class="input-group">
+                            <label>End Date</label>
+                            <input type="date" id="ingest-end" value="2023-12-31">
+                        </div>
+                    </div>
+                    <button onclick="ingestData()">Fetch Data</button>
+                    <p id="ingest-status" class="status"></p>
+                </div>
+
+                <div id="ingest-preview-container" class="glass-card hidden">
+                    <h3>Data Preview</h3>
+                    <div class="table-responsive">
+                        <table id="ingest-preview-table" class="data-table">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulate Tab -->
+            <section id="simulate-tab" class="tab-content">
+                <div class="glass-card">
+                    <h2>Monte Carlo Simulation</h2>
+                    <div class="row">
+                        <div class="input-group">
+                            <label>Ticker</label>
+                            <input type="text" id="sim-ticker" value="AAPL">
+                        </div>
+                        <div class="input-group">
+                            <label>Initial Price</label>
+                            <input type="number" id="sim-initial" value="100.0">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Paths</label>
+                        <input type="number" id="sim-paths" value="1000">
+                    </div>
+                    <button onclick="runSimulation()">Run Simulation</button>
+
+                    <div class="chart-container">
+                        <canvas id="sim-chart"></canvas>
+                    </div>
+
+                    <div id="sim-results" class="results-grid hidden">
+                        <div class="metric-card">
+                            <label>Mean Price <span class="tooltip-icon"
+                                    title="Average price across all simulated paths">?</span></label>
+                            <div id="res-mean" class="value">$0.00</div>
+                        </div>
+                        <div class="metric-card">
+                            <label>VaR (95%) <span class="tooltip-icon"
+                                    title="Value at Risk: Maximum expected loss with 95% confidence">?</span></label>
+                            <div id="res-var" class="value">$0.00</div>
+                        </div>
+                        <div class="metric-card">
+                            <label>CVaR (95%) <span class="tooltip-icon"
+                                    title="Conditional VaR: Expected loss if the threshold is breached">?</span></label>
+                            <div id="res-cvar" class="value">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stress Test Tab -->
+            <section id="stress-tab" class="tab-content">
+                <div class="glass-card">
+                    <h2>Stress Testing</h2>
+                    <div class="row">
+                        <div class="input-group">
+                            <label>Ticker</label>
+                            <input type="text" id="stress-ticker" value="AAPL">
+                        </div>
+                        <div class="input-group">
+                            <label>Initial Price</label>
+                            <input type="number" id="stress-initial" value="100.0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-group">
+                            <label>Scenario</label>
+                            <select id="stress-type">
+                                <option value="price_shock">Price Crash</option>
+                                <option value="vol_shock">Vol Spike</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Shock (e.g. 0.3)</label>
+                            <input type="number" id="stress-shock" value="0.3" step="0.1">
+                        </div>
+                    </div>
+                    <button onclick="runStressTest()">Run Stress Test</button>
+
+                    <div class="chart-container">
+                        <canvas id="stress-chart"></canvas>
+                    </div>
+
+                    <div id="stress-results" class="glass-card output-box hidden">
+                        <!-- JSON Output -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

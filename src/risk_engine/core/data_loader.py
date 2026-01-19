@@ -6,7 +6,7 @@ from typing import List, Optional
 import os
 from datetime import datetime
 
-DB_PATH = os.path.join(os.getcwd(), 'risk-engine', 'data', 'market_data.duckdb')
+DB_PATH = os.path.join(os.getcwd(), 'data', 'market_data.duckdb')
 
 def get_db_connection():
     """Establishes connection to DuckDB."""
@@ -52,8 +52,11 @@ def fetch_crypto_data(ticker: str, start_date: str, end_date: str) -> pd.DataFra
             all_ohlcv.extend(ohlcv)
             current_ts = ohlcv[-1][0] + 86400000 # move to next day
             
-            # small break to avoid rate limits if we were looping a lot, but for 1 yr it's 365 pts, 1 call.
+            # small break to avoid rate limits if we were looping a lot.
             if len(ohlcv) < 1000:
+                break
+                
+            if len(all_ohlcv) > 5000: # Cap at ~13 years for safety
                 break
                 
     except Exception as e:
@@ -97,18 +100,29 @@ def fetch_market_data(tickers: List[str], start_date: str, end_date: str) -> pd.
             if len(yahoo_tickers) == 1:
                 ticker = yahoo_tickers[0]
                 df = data.copy()
+                # yfinance 0.2+ returns different structures. Data might not be MultiIndex if 1 ticker.
+                if isinstance(df.columns, pd.MultiIndex):
+                     df.columns = df.columns.droplevel(0) # Drop ticker level if exists
+                
                 df['Ticker'] = ticker
                 df = df.reset_index()
                 all_data.append(df)
             else:
+                # Multi-ticker
                 for ticker in yahoo_tickers:
-                    if ticker in data.columns.levels[0]:
-                        df = data[ticker].copy()
-                        df['Ticker'] = ticker
-                        df = df.reset_index()
-                        all_data.append(df)
+                    try:
+                        # Accessing MultiIndex columns: data[ticker] isn't always reliable with new pandas
+                        # Use cross-section if possible, or simple column access
+                        if ticker in data.columns.levels[0]:
+                             df = data.xs(ticker, level=0, axis=1).copy()
+                             df['Ticker'] = ticker
+                             df = df.reset_index()
+                             all_data.append(df)
+                    except Exception as ex:
+                        print(f"Skipping {ticker}: {ex}")
         except Exception as e:
             print(f"Error fetching Yahoo data: {e}")
+            # If Yahoo fails physically (network), we just log it. Don't crash ingestion of others.
 
     # Process Crypto Tickers
     for t in crypto_tickers:

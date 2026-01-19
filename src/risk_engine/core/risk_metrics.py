@@ -46,5 +46,13 @@ if __name__ == "__main__":
     outcomes = np.random.normal(105, 10, 10000) # Mean 105 (gain), std 10
     var_95 = calculate_var(outcomes, initial, 0.95)
     cvar_95 = calculate_cvar(outcomes, initial, 0.95)
-    print(f"VaR 95%: {var_95:.2f}")
     print(f"CVaR 95%: {cvar_95:.2f}")
+
+def calculate_stress_impact(initial_price: float, shock_pct: float) -> float:
+    """
+    Calculates the PnL impact of a deterministic price shock.
+    shock_pct: e.g., 0.20 for a 20% drop.
+    Returns: The loss amount (positive value).
+    """
+    loss = initial_price * shock_pct
+    return loss

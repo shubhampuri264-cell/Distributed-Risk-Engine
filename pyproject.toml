@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "risk_engine"
+version = "0.1.0"
+description = "Distributed Risk Engine with API-First Architecture"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas",
+    "numpy",
+    "duckdb",
+    "ray",
+    "fastapi",
+    "uvicorn",
+    "streamlit",
+    "yfinance",
+    "click",
+    "requests",
+    "ccxt",
+    "fakeredis"
+]
+
+[project.scripts]
+risk-engine = "risk_engine.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]

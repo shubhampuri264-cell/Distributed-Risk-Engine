@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # 1. The API Server
+  api:
+    build: .
+    container_name: risk-engine-api
+    command: uvicorn risk_engine.api:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    # Ray needs shared memory
+    shm_size: '2gb'
+
+
+
+  # 3. Real Redis (Replacing Fakeredis for Prod)
+  redis:
+    image: redis:alpine
+    container_name: risk-engine-redis
+    ports:
+      - "6379:6379"

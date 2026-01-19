@@ -1,13 +1,17 @@
 pandas
 numpy
 duckdb
-ray
+ray ## Ray can only be installed on python 3.8-3.11 
 fastapi
 uvicorn
-streamlit
 redis
 yfinance
 click
 pytest
 requests
 ccxt
+fakeredis
+plotly
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart

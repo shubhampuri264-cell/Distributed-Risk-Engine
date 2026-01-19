@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.env
+market_data.duckdb
+market_data.duckdb.wal
+risk-engine.egg-info/
